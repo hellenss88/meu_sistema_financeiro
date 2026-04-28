@@ -181,10 +181,10 @@ def atualizar_investimento(usuario_id: int, inv: InvestimentoUpdate, db: Session
 
 @app.get("/transacoes/{usuario_id}")
 def listar_transacoes(usuario_id: int, db: Session = Depends(get_db)):
-    # Busca todas as transações, da mais recente para a mais antiga
-    return db.query(Transacao).filter(
-        Transacao.usuario_id == usuario_id
-    ).order_by(Transacao.data_transacao.desc()).all()
+    # Agora buscamos TODAS as transações do banco, independente de quem as criou
+    # A variável usuario_id continua no nome da função para não quebrar o Streamlit,
+    # mas o banco de dados vai ignorar ela e trazer tudo.
+    return db.query(Transacao).order_by(Transacao.data_transacao.desc()).all()
 
 # --- ROTA PARA ATUALIZAR (EDITAR) ---
 @app.put("/transacoes/{transacao_id}")
