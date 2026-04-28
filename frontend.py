@@ -1,6 +1,11 @@
 import streamlit as st
 import requests
 
+if "logado" not in st.session_state:
+    st.session_state.logado = False
+    st.session_state.usuario_id = None
+    st.session_state.nome_usuario = ""
+
 # Configurações da página
 st.set_page_config(page_title="Finanças Familiares", page_icon="💰")
 st.title("💰 Sistema Financeiro Familiar")
@@ -24,7 +29,7 @@ if st.session_state["usuario_id"] is None:
         # O st.button vira st.form_submit_button
         botao_entrar = st.form_submit_button("Entrar")
         
-    # O "if" agora fica fora do form e olha para a variável do botão
+# O "if" agora fica fora do form e olha para a variável do botão
     if botao_entrar:
         if email and senha:
             # Pede para o FastAPI conferir a senha
@@ -32,11 +37,17 @@ if st.session_state["usuario_id"] is None:
             
             if resposta.status_code == 200:
                 dados = resposta.json()
+                
+                # --- AQUI ESTÁ A MUDANÇA: SALVANDO O ESTADO ---
+                st.session_state["logado"] = True
+                st.session_state["usuario_id"] = dados["usuario_id"]
+                st.session_state["nome_usuario"] = dados["nome"]
+                
                 st.success(f"Bem-vinda, {dados['nome']}!")
                 st.balloons() # Solta balõezinhos na tela!
-                # Salva quem você é para mudar a tela
-                st.session_state["usuario_id"] = dados["usuario_id"]
-                st.rerun() # Atualiza a página
+                
+                # O rerun agora vai ver que "logado" é True e mudar a tela
+                st.rerun() 
             else:
                 st.error("❌ E-mail ou senha incorretos.")
         else:
