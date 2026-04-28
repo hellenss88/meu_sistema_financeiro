@@ -116,28 +116,27 @@ def criar_transacao(usuario_id: int, transacao: TransacaoCreate, db: Session = D
 
 @app.get("/resumo/{usuario_id}")
 def obter_resumo(usuario_id: int, db: Session = Depends(get_db)):
-    # ... (mantenha os cálculos de entradas, saídas e dívida) ...
-    entradas = db.query(func.sum(Transacao.valor)).filter(Transacao.usuario_id == usuario_id, Transacao.tipo == 'entrada').scalar() or 0
-    saidas_reais = db.query(func.sum(Transacao.valor)).filter(Transacao.usuario_id == usuario_id, Transacao.tipo == 'saida', Transacao.pago == True).scalar() or 0
-    divida_cartao = db.query(func.sum(Transacao.valor)).filter(Transacao.usuario_id == usuario_id, Transacao.tipo == 'saida', Transacao.pago == False).scalar() or 0
+    # Agora somamos TUDO de todos os usuários para a conta conjunta
+    entradas = db.query(func.sum(Transacao.valor)).filter(Transacao.tipo == 'entrada').scalar() or 0
+    saidas_reais = db.query(func.sum(Transacao.valor)).filter(Transacao.tipo == 'saida', Transacao.pago == True).scalar() or 0
+    divida_cartao = db.query(func.sum(Transacao.valor)).filter(Transacao.tipo == 'saida', Transacao.pago == False).scalar() or 0
     
-    # Snapshot Investimento
-    ultimo_inv = db.query(Investimento).filter(Investimento.usuario_id == usuario_id).order_by(Investimento.data_verificacao.desc()).first()
+    # Snapshot Investimento (Pega o último lançamento global)
+    ultimo_inv = db.query(Investimento).order_by(Investimento.data_verificacao.desc()).first()
     inv_total = ultimo_inv.valor if ultimo_inv else 0
     data_inv = ultimo_inv.data_verificacao if ultimo_inv else None
 
- # NOVO: Snapshot Dólar (Protegido e funcional!)
-    ultimo_dolar = db.query(ContaDolar).filter(ContaDolar.usuario_id == usuario_id).order_by(ContaDolar.data_verificacao.desc()).first()
+    # NOVO: Snapshot Dólar (Pega o último lançamento global)
+    ultimo_dolar = db.query(ContaDolar).order_by(ContaDolar.data_verificacao.desc()).first()
     
-    # Se encontrar dados, usa; se não, usa 0 e None
     dolar_total = ultimo_dolar.valor if ultimo_dolar else 0.0
     data_dolar = ultimo_dolar.data_verificacao if ultimo_dolar else None
 
     return {
-        "entradas": entradas or 0,
-        "saidas_reais": saidas_reais or 0,
-        "saldo_em_conta": (entradas or 0) - (saidas_reais or 0),
-        "divida_cartao": divida_cartao or 0,
+        "entradas": entradas,
+        "saidas_reais": saidas_reais,
+        "saldo_em_conta": entradas - saidas_reais,
+        "divida_cartao": divida_cartao,
         "investimento_total": inv_total,
         "data_investimento": data_inv,
         "dolar_total": dolar_total,
