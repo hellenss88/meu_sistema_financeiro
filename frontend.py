@@ -6,7 +6,7 @@ st.set_page_config(page_title="Finanças Familiares", page_icon="💰")
 st.title("💰 Sistema Financeiro Familiar")
 
 # Endereço do seu FastAPI (o motor que está rodando no fundo)
-API_URL = "http://127.0.0.1:8000"
+API_URL = "https://meu-sistema-financeiro.onrender.com"
 
 # Cria uma "memória" para o site saber se você está logada
 if "usuario_id" not in st.session_state:
