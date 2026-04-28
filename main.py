@@ -136,7 +136,7 @@ def obter_resumo(usuario_id: int, db: Session = Depends(get_db)):
     return {
         "entradas": entradas or 0,
         "saidas_reais": saidas_reais or 0,
-        "saldo_em_cuenta": (entradas or 0) - (saidas_reais or 0),
+        "saldo_em_conta": (entradas or 0) - (saidas_reais or 0),
         "divida_cartao": divida_cartao or 0,
         "investimento_total": inv_total,
         "data_investimento": data_inv,
