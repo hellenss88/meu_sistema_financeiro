@@ -126,13 +126,12 @@ def obter_resumo(usuario_id: int, db: Session = Depends(get_db)):
     inv_total = ultimo_inv.valor if ultimo_inv else 0
     data_inv = ultimo_inv.data_verificacao if ultimo_inv else None
 
-    # NOVO: Snapshot Dólar
-    # ultimo_dolar = db.query(ContaDolar).filter(ContaDolar.usuario_id == usuario_id).order_by(ContaDolar.data_verificacao.desc()).first()
-    # dolar_total = ultimo_dolar.valor if ultimo_dolar else 0
-    # data_dolar = ultimo_dolar.data_verificacao if ultimo_dolar else None
-
-    dolar_total = 0 # Valor padrão para não travar
-    data_dolar = None
+ # NOVO: Snapshot Dólar (Protegido e funcional!)
+    ultimo_dolar = db.query(ContaDolar).filter(ContaDolar.usuario_id == usuario_id).order_by(ContaDolar.data_verificacao.desc()).first()
+    
+    # Se encontrar dados, usa; se não, usa 0 e None
+    dolar_total = ultimo_dolar.valor if ultimo_dolar else 0.0
+    data_dolar = ultimo_dolar.data_verificacao if ultimo_dolar else None
 
     return {
         "entradas": entradas or 0,
