@@ -13,8 +13,8 @@ URL_NOVA = "postgresql://neondb_owner:npg_KN6FkUGXI2yf@ep-floral-mud-amfdg395.c-
 engine_antigo = create_engine(URL_ANTIGA)
 engine_novo = create_engine(URL_NOVA)
 
-# 2. Ordem das tabelas (A ordem importa! O usuário precisa existir antes das transações)
-tabelas = ["usuarios", "transacoes", "contas_fixas"]
+# 2. Ordem das tabelas (Atualizada para incluir Investimentos e Dólar)
+tabelas = ["transacoes", "contas_fixas", "investimentos", "conta_dolar"]
 
 # 3. A mágica do Pandas
 for tabela in tabelas:
