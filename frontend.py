@@ -127,28 +127,29 @@ else:
                 data_fechamento = st.date_input("Até qual data pagar?", format="DD/MM/YYYY")
 
                 # --- CÁLCULO DO VALOR DA FATURA ---
-                # Ajustamos os nomes para baterem com as variáveis acima
                 if cartao_alvo and data_fechamento:
-                    # Filtramos o DataFrame
-                    fatura_df = df_filtrado[
-                        (df_filtrado['metodo_pagamento'] == cartao_alvo) & 
-                        (df_filtrado['data_transacao'].dt.date <= data_fechamento) &
-                        (df_filtrado['pago'] == False)
-                    ]
+                    # Criamos um DataFrame na hora usando todas as transações já carregadas
+                    df_fatura_temp = pd.DataFrame(todas_transacoes)
                     
-                    total_fatura = fatura_df['valor'].sum()
+                    if not df_fatura_temp.empty:
+                        # Garante que a data está no formato de data do Pandas
+                        df_fatura_temp['data_transacao'] = pd.to_datetime(df_fatura_temp['data_transacao'])
+                        
+                        # Filtramos o DataFrame temporário
+                        fatura_df = df_fatura_temp[
+                            (df_fatura_temp['metodo_pagamento'] == cartao_alvo) & 
+                            (df_fatura_temp['data_transacao'].dt.date <= data_fechamento) &
+                            (df_fatura_temp['pago'] == False)
+                        ]
+                        total_fatura = fatura_df['valor'].sum()
+                    else:
+                        total_fatura = 0
                     
                     # Exibe o valor de forma destacada
                     st.info(f"💰 **Valor Total a Pagar:** R$ {formata_br(total_fatura)}")
                     
                     if total_fatura == 0:
                         st.warning("Nenhuma transação pendente encontrada para este cartão até esta data.")
-
-                if st.button("Confirmar Pagamento da Fatura"):
-                    payload_f = {"metodo_pagamento": cartao_alvo, "data_corte": data_fechamento.isoformat()}
-                    res = requests.post(f"{API_URL}/pagar_fatura/{st.session_state['usuario_id']}", json=payload_f).json()
-                    st.success(f"Pago! R$ {res['valor_pago']:.2f} processados.")
-                    st.rerun()
 
     with aba_relatorio:
         # Aqui entra o seu conhecimento de Data Science!
