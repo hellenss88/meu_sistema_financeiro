@@ -58,10 +58,26 @@ else:
     import datetime
     import pandas as pd # <-- Agora o Pandas entra em ação!
 
-    # 1. Busca os dados atualizados
-    resumo = requests.get(f"{API_URL}/resumo/{st.session_state['usuario_id']}").json()
-    # Busca a lista de todas as transações para os gráficos
-    todas_transacoes = requests.get(f"{API_URL}/transacoes/{st.session_state['usuario_id']}").json()
+        # 1. Busca os dados atualizados
+        try:
+            # Tenta buscar o resumo do banco de dados
+            resposta_resumo = requests.get(f"{API_URL}/resumo/{st.session_state['usuario_id']}")
+            resumo = resposta_resumo.json()
+        except Exception as e:
+            # Plano B: Se o servidor falhar, define valores zerados para a tela não quebrar
+            st.warning("⚠️ O servidor está acordando. Os valores abaixo serão atualizados em instantes...")
+            resumo = {
+                "entradas": 0, "saidas_reais": 0, "saldo_em_conta": 0, 
+                "divida_cartao": 0, "investimento_total": 0, "dolar_total": 0,
+                "data_investimento": None, "data_dolar": None
+            }
+
+        # Busca a lista de todas as transações para os gráficos
+        try:
+            resposta_transacoes = requests.get(f"{API_URL}/transacoes/{st.session_state['usuario_id']}")
+            todas_transacoes = resposta_transacoes.json()
+        except:
+            todas_transacoes = []
     
     st.sidebar.button("Sair", on_click=lambda: st.session_state.update({"usuario_id": None}))
 
