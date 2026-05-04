@@ -178,9 +178,24 @@ else:
                     st.write("Sem saídas no período.")
 
             with g2:
-                st.write("### Evolução Diária")
-                evolucao = df_filtrado.groupby('data_transacao')['valor'].sum()
-                st.line_chart(evolucao)
+                # 1. Preparar os dados com Pandas
+                if todas_transacoes:
+                    df = pd.DataFrame(todas_transacoes)
+                    df['data_transacao'] = pd.to_datetime(df['data_transacao'])
+                    
+                    # Criar uma coluna de Mês/Ano para agrupar
+                    df['Mes'] = df['data_transacao'].dt.strftime('%b/%Y')
+                    
+                    # Agrupar por Mês e Tipo, somando os valores
+                    df_mensal = df.groupby(['Mes', 'tipo'])['valor'].sum().reset_index()
+                    
+                    # Pivotar os dados para o gráfico de barras
+                    df_pivot = df_mensal.pivot(index='Mes', columns='tipo', values='valor').fillna(0)
+                    
+                    st.subheader("Balanço Mensal: Entradas vs Saídas")
+                    st.bar_chart(df_pivot)
+                else:
+                    st.info("Ainda não há transações para gerar o balanço mensal.")
 
             st.write("### Extrato Detalhado")
             
