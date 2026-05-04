@@ -197,6 +197,32 @@ else:
                 else:
                     st.info("Ainda não há transações para gerar o balanço mensal.")
 
+            # --- NOVOS FILTROS DINÂMICOS ---
+            st.write("### 🔍 Refinar Busca")
+            col_f1, col_f2 = st.columns(2)
+
+            with col_f1:
+                # Filtro por Categoria (Finalidade)
+                categorias = ["Todas"] + sorted(df_filtrado['finalidade'].unique().tolist())
+                cat_selecionada = st.selectbox("Filtrar por Categoria:", categorias)
+
+            with col_f2:
+                # Filtro por Descrição (Busca livre)
+                busca_termo = st.text_input("Buscar por descrição:", "")
+
+            # Aplicando os filtros no DataFrame original
+            if cat_selecionada != "Todas":
+                df_filtrado = df_filtrado[df_filtrado['finalidade'] == cat_selecionada]
+
+            if busca_termo:
+                # Filtra se o termo digitado estiver na descrição (independente de maiúscula/minúscula)
+                df_filtrado = df_filtrado[df_filtrado['descricao'].str.contains(busca_termo, case=False)]
+
+            # Opcional: Filtro por Valor Mínimo
+            valor_min = st.slider("Valor mínimo (R$):", 0.0, float(df_filtrado['valor'].max() if not df_filtrado.empty else 0), 0.0)
+            df_filtrado = df_filtrado[df_filtrado['valor'] >= valor_min]
+
+
             st.write("### Extrato Detalhado")
             
             # Cria uma cópia só para a tela (assim não quebra os filtros)
