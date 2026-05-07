@@ -111,9 +111,9 @@ else:
                     data = st.date_input("Data", datetime.date.today(), format="DD/MM/YYYY")
                     desc = st.text_input("Descrição")
                     val = st.number_input("Valor", min_value=0.01)
-                    fin = st.selectbox("Finalidade", ["Alimentação", "Assinaturas", "Carro", "Casa", "Dívidas", "Empréstimo", "Estudos", "Investimentos", "Lazer", "Pensão", "Presente", "Salário", "Saúde", "Seguro", "UniTV", "Vale-Alimentação", "Vendas", "Vestuário", "Viagem", "Outros"])
+                    fin = st.selectbox("Finalidade", ["Alimentação", "Assinaturas", "Carro", "Casa", "Dívidas", "Empréstimo", "Estudos", "Investimentos", "Lazer", "Pensão", "Pet", "Presente", "Salário", "Saúde", "Seguro", "UniTV", "Vale-Alimentação", "Vendas", "Vestuário", "Viagem", "Outros"])
                     tipo = st.selectbox("Tipo", ["saida", "entrada"])
-                    met = st.selectbox("Método", ["PIX", "Boleto", "Dinheiro", "Débito", "CC - Inter Hellen", "CC - XP Tiago", "CC - ML Hellen", "CC - Nu Tiago"])
+                    met = st.selectbox("Método", ["PIX", "Boleto", "Dinheiro", "Débito", "CC - Inter Hellen", "CC - XP Tiago", "CC - ML Hellen", "CC - Nu Tiago", "CC - C6 Tiago"])
                     
                     if st.form_submit_button("Salvar"):
                         payload = {"descricao": desc, "valor": val, "finalidade": fin, "tipo": tipo, "metodo_pagamento": met, "data_transacao": data.isoformat()}
@@ -123,7 +123,7 @@ else:
         with col_dir:
             with st.expander("💳 Pagar Fatura", expanded=True):
                 st.write("Selecione o cartão e a data de fechamento.")
-                cartao_alvo = st.selectbox("Cartão", ["CC - Inter Hellen", "CC - XP Tiago", "CC - ML Hellen", "CC - Nu Tiago"])
+                cartao_alvo = st.selectbox("Cartão", ["CC - Inter Hellen", "CC - XP Tiago", "CC - ML Hellen", "CC - Nu Tiago", "CC - C6 Tiago"])
                 data_fechamento = st.date_input("Até qual data pagar?", format="DD/MM/YYYY")
 
                 # --- CÁLCULO DO VALOR DA FATURA ---
@@ -289,11 +289,11 @@ else:
                 with c2:
                     novo_tipo = st.selectbox("Novo Tipo", ["saida", "entrada"], index=0 if linha['tipo']=='saida' else 1)
                     
-                    lista_fin = ["Alimentação", "Assinaturas", "Carro", "Casa", "Dívidas", "Empréstimo", "Estudos", "Investimentos", "Lazer", "Pensão", "Presente", "Salário", "Saúde", "Seguro", "UniTV", "Vale-Alimentação", "Vendas", "Vestuário", "Viagem", "Outros"]
+                    lista_fin = ["Alimentação", "Assinaturas", "Carro", "Casa", "Dívidas", "Empréstimo", "Estudos", "Investimentos", "Lazer", "Pensão", "Pet", "Presente", "Salário", "Saúde", "Seguro", "UniTV", "Vale-Alimentação", "Vendas", "Vestuário", "Viagem", "Outros"]
                     idx_fin = lista_fin.index(linha['finalidade']) if linha['finalidade'] in lista_fin else 0
                     nova_fin = st.selectbox("Nova Finalidade", lista_fin, index=idx_fin)
                     
-                    lista_met = ["PIX", "Boleto", "Dinheiro", "Débito", "CC - Inter Hellen", "CC - XP Tiago", "CC - ML Hellen", "CC - Nu Tiago"]
+                    lista_met = ["PIX", "Boleto", "Dinheiro", "Débito", "CC - Inter Hellen", "CC - XP Tiago", "CC - ML Hellen", "CC - Nu Tiago", "CC - C6 Tiago"]
                     idx_met = lista_met.index(linha['metodo_pagamento']) if linha['metodo_pagamento'] in lista_met else 0
                     novo_met = st.selectbox("Novo Método", lista_met, index=idx_met)
                 
@@ -328,7 +328,7 @@ else:
                 desc_cf = st.text_input("Descrição (Ex: Aluguel)")
                 val_cf = st.number_input("Valor Estimado", min_value=0.01)
                 dia_cf = st.number_input("Dia do Vencimento", min_value=1, max_value=31, value=10)
-                met_cf = st.selectbox("Método Previsto", ["PIX", "Boleto", "Débito Automático", "CC - Inter Hellen", "CC - XP Tiago", "CC - ML Hellen", "CC - Nu Tiago"])
+                met_cf = st.selectbox("Método Previsto", ["PIX", "Boleto", "Débito Automático", "CC - Inter Hellen", "CC - XP Tiago", "CC - ML Hellen", "CC - Nu Tiago", "CC - C6 Tiago"])
                 
                 if st.form_submit_button("Salvar Conta Fixa", use_container_width=True):
                     payload_cf = {"descricao": desc_cf, "valor": val_cf, "dia_vencimento": dia_cf, "metodo_pagamento": met_cf}
@@ -364,7 +364,7 @@ else:
                             e_val = st.number_input("Valor", value=float(linha_cf['valor']), key="e_val")
                         with c2:
                             e_dia = st.number_input("Dia", value=int(linha_cf['dia_vencimento']), min_value=1, max_value=31, key="e_dia")
-                            lista_met = ["PIX", "Boleto", "Débito Automático", "CC - Inter Hellen", "CC - XP Tiago", "CC - ML Hellen", "CC - Nu Tiago"]
+                            lista_met = ["PIX", "Boleto", "Débito Automático", "CC - Inter Hellen", "CC - XP Tiago", "CC - ML Hellen", "CC - Nu Tiago", "CC - C6 Tiago"]
                             idx_met = lista_met.index(linha_cf['metodo_pagamento']) if linha_cf['metodo_pagamento'] in lista_met else 0
                             e_met = st.selectbox("Método", lista_met, index=idx_met, key="e_met")
                         

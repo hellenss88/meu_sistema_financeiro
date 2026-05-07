@@ -26,6 +26,7 @@ class CategoriaFinalidade(str, Enum):
     investimentos = "Investimentos"
     lazer = "Lazer"
     pensao = "Pensão"
+    pet = "Pet"
     presente = "Presente"
     salario = "Salário"
     saude = "Saúde"
@@ -46,6 +47,7 @@ class MetodoPagamento(str, Enum):
     cc_xp = "CC - XP Tiago"
     cc_ml = "CC - ML Hellen"
     cc_nu = "CC - Nu Tiago"
+    cc_c6 = "CC - C6 Tiago"
 
 # --- SCHEMAS ---
 class TransacaoCreate(BaseModel):
