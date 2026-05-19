@@ -151,6 +151,14 @@ else:
                     if total_fatura == 0:
                         st.warning("Nenhuma transação pendente encontrada para este cartão até esta data.")
 
+
+                    # --- O BOTÃO DE CONFIRMAR ENTRA AQUI ---
+                    if st.button("Confirmar Pagamento da Fatura"):
+                        payload_f = {"metodo_pagamento": cartao_alvo, "data_corte": data_fechamento.isoformat()}
+                        res = requests.post(f"{API_URL}/pagar_fatura/{st.session_state['usuario_id']}", json=payload_f).json()
+                        st.success(f"Pago! R$ {res['valor_pago']:.2f} processados.")
+                        st.rerun()
+
     with aba_relatorio:
         # Aqui entra o seu conhecimento de Data Science!
         df = pd.DataFrame(todas_transacoes)
