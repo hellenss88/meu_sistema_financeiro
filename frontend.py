@@ -166,25 +166,60 @@ else:
         if df.empty:
             st.info("Lance alguns gastos para ver os gráficos!")
         else:
-            st.subheader("🔍 Filtros e Análise")
+            st.subheader("🔍 Busca Avançada e Dashboard")
             df['data_transacao'] = pd.to_datetime(df['data_transacao'])
-            
-            # --- Filtro de data inteligente (Padrão: Últimos 30 dias) ---
-            # O Python calcula que dia foi 30 dias atrás
-            trinta_dias_atras = datetime.date.today() - datetime.timedelta(days=30)
-            
-            col_f1, col_f2 = st.columns(2)
-            with col_f1:
-                # O padrão agora é trinta_dias_atras, mas você pode editar na tela quando quiser!
-                dt_inicio = st.date_input("De:", trinta_dias_atras, format="DD/MM/YYYY")
-            with col_f2:
-                dt_fim = st.date_input("Até:", datetime.date.today(), format="DD/MM/YYYY")
+            df_filtrado = df.copy() # Começamos com uma cópia limpa de tudo
 
-            # Aplicando filtros no DataFrame
-            mask = (df['data_transacao'].dt.date >= dt_inicio) & (df['data_transacao'].dt.date <= dt_fim)
-            df_filtrado = df.loc[mask]
+            # --- PAINEL DE FILTROS ---
+            with st.expander("⚙️ Filtros da Busca", expanded=True):
+                col_d1, col_d2, col_d3 = st.columns(3)
+                
+                with col_d1:
+                    # O "Pulo do Gato": Checkbox para ligar/desligar a restrição de data
+                    filtrar_data = st.checkbox("Filtrar por Data? (Padrão: 30 dias)", value=True)
+                    if filtrar_data:
+                        trinta_dias_atras = datetime.date.today() - datetime.timedelta(days=30)
+                        dt_inicio = st.date_input("De:", trinta_dias_atras, format="DD/MM/YYYY")
+                        dt_fim = st.date_input("Até:", datetime.date.today(), format="DD/MM/YYYY")
+                
+                with col_d2:
+                    tipo_sel = st.selectbox("Tipo:", ["Todos", "saida", "entrada"])
+                    
+                    # Puxa as categorias que existem no banco (sempre atualizado)
+                    categorias = ["Todas"] + sorted(df['finalidade'].dropna().unique().tolist())
+                    cat_sel = st.selectbox("Categoria:", categorias)
 
-            # Gráficos Dinâmicos
+                with col_d3:
+                    metodos = ["Todos"] + sorted(df['metodo_pagamento'].dropna().unique().tolist())
+                    metodo_sel = st.selectbox("Método de Pagto:", metodos)
+                    
+                    busca_texto = st.text_input("Buscar na Descrição:")
+
+                # Slider de faixa de valor (com duas pontas para Min e Max)
+                max_val = float(df['valor'].max()) if not df.empty else 1000.0
+                if max_val == 0: max_val = 1.0 # Evita bug se tudo for zero
+                valor_range = st.slider("Faixa de Valor (R$):", 0.0, max_val, (0.0, max_val))
+
+            # --- APLICANDO OS FILTROS NO PANDAS ---
+            if filtrar_data:
+                mask_data = (df_filtrado['data_transacao'].dt.date >= dt_inicio) & (df_filtrado['data_transacao'].dt.date <= dt_fim)
+                df_filtrado = df_filtrado.loc[mask_data]
+            
+            if tipo_sel != "Todos":
+                df_filtrado = df_filtrado[df_filtrado['tipo'] == tipo_sel]
+                
+            if cat_sel != "Todas":
+                df_filtrado = df_filtrado[df_filtrado['finalidade'] == cat_sel]
+                
+            if metodo_sel != "Todos":
+                df_filtrado = df_filtrado[df_filtrado['metodo_pagamento'] == metodo_sel]
+                
+            if busca_texto:
+                df_filtrado = df_filtrado[df_filtrado['descricao'].str.contains(busca_texto, case=False, na=False)]
+                
+            df_filtrado = df_filtrado[(df_filtrado['valor'] >= valor_range[0]) & (df_filtrado['valor'] <= valor_range[1])]
+
+            # --- GRÁFICOS DINÂMICOS (Agora eles obedecem a Busca Avançada!) ---
             g1, g2 = st.columns(2)
             
             with g1:
@@ -192,62 +227,24 @@ else:
                 saidas = df_filtrado[df_filtrado['tipo'] == 'saida']
                 if not saidas.empty:
                     import plotly.express as px
-                    
-                    # Prepara os dados do jeito que o Plotly gosta
                     pizza = saidas.groupby('finalidade', as_index=False)['valor'].sum()
-                    
-                    # Cria um gráfico de rosca (hole=0.4) interativo
                     fig = px.pie(pizza, values='valor', names='finalidade', hole=0.4)
-                    
-                    # Plota na tela do Streamlit
                     st.plotly_chart(fig, use_container_width=True)
                 else:
-                    st.write("Sem saídas no período.")
+                    st.write("Sem saídas para este filtro.")
 
             with g2:
-                # 1. Preparar os dados com Pandas
-                if todas_transacoes:
-                    df = pd.DataFrame(todas_transacoes)
-                    df['data_transacao'] = pd.to_datetime(df['data_transacao'])
-                    
-                    # Criar uma coluna de Mês/Ano para agrupar
-                    df['Mes'] = df['data_transacao'].dt.strftime('%b/%Y')
-                    
-                    # Agrupar por Mês e Tipo, somando os valores
-                    df_mensal = df.groupby(['Mes', 'tipo'])['valor'].sum().reset_index()
-                    
-                    # Pivotar os dados para o gráfico de barras
+                if not df_filtrado.empty:
+                    # Usa os dados filtrados para gerar o balanço!
+                    df_graf = df_filtrado.copy()
+                    df_graf['Mes'] = df_graf['data_transacao'].dt.strftime('%b/%Y')
+                    df_mensal = df_graf.groupby(['Mes', 'tipo'])['valor'].sum().reset_index()
                     df_pivot = df_mensal.pivot(index='Mes', columns='tipo', values='valor').fillna(0)
                     
-                    st.subheader("Balanço Mensal: Entradas vs Saídas")
+                    st.subheader("Balanço do Período Filtrado")
                     st.bar_chart(df_pivot)
                 else:
-                    st.info("Ainda não há transações para gerar o balanço mensal.")
-
-            # --- NOVOS FILTROS DINÂMICOS ---
-            st.write("### 🔍 Refinar Busca")
-            col_f1, col_f2 = st.columns(2)
-
-            with col_f1:
-                # Filtro por Categoria (Finalidade)
-                categorias = ["Todas"] + sorted(df_filtrado['finalidade'].unique().tolist())
-                cat_selecionada = st.selectbox("Filtrar por Categoria:", categorias)
-
-            with col_f2:
-                # Filtro por Descrição (Busca livre)
-                busca_termo = st.text_input("Buscar por descrição:", "")
-
-            # Aplicando os filtros no DataFrame original
-            if cat_selecionada != "Todas":
-                df_filtrado = df_filtrado[df_filtrado['finalidade'] == cat_selecionada]
-
-            if busca_termo:
-                # Filtra se o termo digitado estiver na descrição (independente de maiúscula/minúscula)
-                df_filtrado = df_filtrado[df_filtrado['descricao'].str.contains(busca_termo, case=False)]
-
-            # Opcional: Filtro por Valor Mínimo
-            valor_min = st.slider("Valor mínimo (R$):", 0.0, float(df_filtrado['valor'].max() if not df_filtrado.empty else 0), 0.0)
-            df_filtrado = df_filtrado[df_filtrado['valor'] >= valor_min]
+                    st.info("Ainda não há transações para este filtro.")
 
 
             st.write("### Extrato Detalhado")
